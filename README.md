@@ -8,3 +8,5 @@ The objective is to receive requests from the front end, store the data of each 
 
 - Node.js
 - Express
+- MySQL
+- Sequelize

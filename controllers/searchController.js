@@ -1,6 +1,8 @@
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
+const { Log } = require("../models");
+
 async function artistAlbums(req, res) {
   try {
     //get api token
@@ -118,6 +120,12 @@ async function artistAlbums(req, res) {
             albumsIds = "";
           }
         }
+
+        //store log
+        await Log.create({
+          ip: req.ip,
+          artistName: req.params.artist,
+        });
 
         res.json(albumsData.sort((a, b) => b.popularity - a.popularity));
       } else {
