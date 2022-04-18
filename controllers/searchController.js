@@ -64,21 +64,57 @@ async function artistAlbums(req, res) {
     }
 
     //get albums data
+    let albumsIds = "";
     const albumsData = [];
 
-    for (const album of dataArtistAlbums) {
-      const resultAlbumDetails = await fetch(
-        `${process.env.SPOTIFY_API_URL}/albums/${album.id}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${dataToken.access_token}}`,
-          },
-        }
-      );
+    for (let i = 0; i < dataArtistAlbums.length; i++) {
+      albumsIds += dataArtistAlbums[i].id + ",";
 
-      const dataAlbumDetails = await resultAlbumDetails.json();
-      albumsData.push(dataAlbumDetails);
+      //get several albums (max 20 ids)
+      if ((i + 1) % 20 === 0) {
+        const resultAlbumsDetails = await fetch(
+          `${process.env.SPOTIFY_API_URL}/albums/?ids=${albumsIds.slice(
+            0,
+            -1
+          )}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${dataToken.access_token}}`,
+            },
+          }
+        );
+
+        const dataAlbumsDetails = await resultAlbumsDetails.json();
+
+        albumsData.push(...dataAlbumsDetails.albums);
+        albumsIds = "";
+      }
+
+      //last call
+      else if (
+        dataArtistAlbums.length -
+          albumsData.length -
+          albumsIds.slice(0, -1).split(",").length ===
+        0
+      ) {
+        const resultAlbumsDetails = await fetch(
+          `${process.env.SPOTIFY_API_URL}/albums/?ids=${albumsIds.slice(
+            0,
+            -1
+          )}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${dataToken.access_token}}`,
+            },
+          }
+        );
+        const dataAlbumsDetails = await resultAlbumsDetails.json();
+
+        albumsData.push(...dataAlbumsDetails.albums);
+        albumsIds = "";
+      }
     }
 
     res.json(albumsData.sort((a, b) => b.popularity - a.popularity));
